@@ -1,4 +1,12 @@
-# Pembagian tugas:
+# Instruksi compile
+
+Jangan lupa compile file sqlite3.c nya juga
+
+```
+gcc main.c sqlite3.c
+```
+
+# Pembagian tugas
 
 ## Soal 1
 
