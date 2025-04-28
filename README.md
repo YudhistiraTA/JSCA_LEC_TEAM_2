@@ -4,10 +4,10 @@
 
 Setiap function disertakan pseudocode.
 
-Function main dan init db - Yudhistira
-Function add_student - Mas Alfian
-Function find_student - Mbak Seraf
-Function delete_student - Mas Willy
+1. Function main dan init db - Yudhistira
+2. Function add_student - Mas Alfian
+3. Function find_student - Mbak Seraf
+4. Function delete_student - Mas Willy
 
 Analisa struktur dan format file - Yudhistira
 
