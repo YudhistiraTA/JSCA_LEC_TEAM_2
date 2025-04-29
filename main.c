@@ -63,7 +63,115 @@ void prompt_and_input(int *input) {
   }
 };
 
-int add_student(sqlite3 *db) { return 0; }
+void free_student_loc(Student *student) {
+  if (student->register_id != NULL) {
+    free(student->register_id);
+  }
+  if (student->name != NULL) {
+    free(student->name);
+  }
+}
+
+void null_database(sqlite3 *db) {
+  fprintf(stderr, "Database connection is NULL.\n");
+  close_and_exit(&db, EXIT_FAILURE);
+}
+
+int is_register_id_exist(sqlite3 ***db, char *register_id) {
+  char *sql = "SELECT COUNT(*) FROM students WHERE register_id = ?;";
+  sqlite3_stmt *stmt;
+  int rc = sqlite3_prepare_v2(**db, sql, -1, &stmt, NULL);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(**db));
+    return FALSE;
+  }
+
+  sqlite3_bind_text(stmt, 1, register_id, -1, SQLITE_STATIC);
+  rc = sqlite3_step(stmt);
+  if (rc == SQLITE_ROW) {
+    int count = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    return count > 0;
+  } else {
+    fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(**db));
+    sqlite3_finalize(stmt);
+    return FALSE;
+  }
+}
+
+int add_student(sqlite3 **db) {
+  if (*db == NULL) { // address of sqlite3
+    null_database(*db);
+  }
+
+  Student student;
+  student.register_id = (char *)malloc(5 * sizeof(char));
+  student.name = (char *)malloc(50 * sizeof(char));
+
+  if (student.register_id == NULL || student.name == NULL) {
+    fprintf(stderr, "Memory allocation failed.\n");
+    return SQLITE_ERROR;
+  }
+
+  int is_id_exist;
+  do {
+    printf("Enter register ID: ");
+    if (scanf("%4s", student.register_id) != 1) {
+      fprintf(stderr, "Invalid input for Registration ID.\n");
+      free_student_loc(&student);
+      return SQLITE_ERROR;
+    }
+
+    is_id_exist = is_register_id_exist(&db, student.register_id);
+
+    if (is_id_exist == TRUE) {
+      printf("Register ID already exists. Please enter a different one.\n");
+    }
+
+  } while (is_id_exist == TRUE);
+  
+  printf("Enter name: ");
+  if (scanf(" %[^\n]", student.name) != 1) {
+    fprintf(stderr, "Invalid input for Name.\n");
+    free_student_loc(&student);
+    return SQLITE_ERROR;
+  }
+
+  printf("Enter age: ");
+  if (scanf("%d", &student.age) != 1) {
+    printf("Invalid age input. Please enter a valid number.\n");
+    while (getchar() != '\n');
+    free_student_loc(&student);
+    return SQLITE_ERROR;
+  }
+
+  const char *insert_query = "INSERT INTO students (register_id, name, age) VALUES (?, ?, ?);";
+  sqlite3_stmt *stmt;
+  int rc = sqlite3_prepare_v2(*db, insert_query, -1, &stmt, NULL);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(*db));
+    free_student_loc(&student);
+    return rc;
+  }
+
+  sqlite3_bind_text(stmt, 1, student.register_id, -1, SQLITE_STATIC);
+  sqlite3_bind_text(stmt, 2, student.name, -1, SQLITE_STATIC);
+  sqlite3_bind_int(stmt, 3, student.age);
+
+  rc = sqlite3_step(stmt);
+  if (rc != SQLITE_DONE) {
+    fprintf(stderr, "Failed to insert student: %s\n", sqlite3_errmsg(*db));
+    sqlite3_finalize(stmt);
+    free_student_loc(&student);
+    return rc;
+  }
+
+  sqlite3_finalize(stmt);
+  free_student_loc(&student);
+
+  printf("Student added successfully.\n");
+  return SQLITE_OK;
+}
 
 int find_student(sqlite3 *db) { return 0; }
 
@@ -88,7 +196,7 @@ int main() {
     prompt_and_input(&choice);
     switch (choice) {
       case 1:
-        err = add_student(db);
+        err = add_student(&db); // give the 'address of db' itself as an argument
         if (err) {
           fprintf(stderr, "Failed to add student.\n");
           close_and_exit(&db, EXIT_FAILURE);
