@@ -4,3 +4,5 @@
 *.o
 *.obj
 *.db
+main
+memory-layout
