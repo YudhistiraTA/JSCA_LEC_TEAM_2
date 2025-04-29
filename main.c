@@ -12,16 +12,16 @@ typedef struct {
   int age;
 } Student;
 
-int initialize_database(sqlite3 *db) {
+int initialize_database(sqlite3 **db) {
   char *err_msg = 0;
 
   /**
    * Open or create a new SQLite database file
    */
-  int rc = sqlite3_open("siswa.db", &db);
+  int rc = sqlite3_open("siswa.db", db);
   if (rc != SQLITE_OK) {
-    fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
-    sqlite3_close(db);
+    fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(*db));
+    sqlite3_close(*db);
     return rc;
   }
 
@@ -33,7 +33,7 @@ int initialize_database(sqlite3 *db) {
       "register_id TEXT PRIMARY KEY, "
       "name TEXT NOT NULL, "
       "age INT NOT NULL);";
-  rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+  rc = sqlite3_exec(*db, sql, 0, 0, &err_msg);
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", err_msg);
     sqlite3_free(err_msg);
@@ -73,7 +73,7 @@ void close_loop(int *program_cycle) {
 
 int main() {
   sqlite3 *db;
-  if (initialize_database(db) != SQLITE_OK) {
+  if (initialize_database(&db) != SQLITE_OK) {
     fprintf(stderr, "Failed to initialize database.\n");
     close_and_exit(db, EXIT_FAILURE);
   }
