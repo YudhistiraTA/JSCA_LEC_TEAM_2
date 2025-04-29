@@ -77,11 +77,11 @@ void null_database(sqlite3 *db) {
   close_and_exit(&db, EXIT_FAILURE);
 }
 
-int add_student(sqlite3 *db) {
-  if (db == NULL) {
-    null_database(db);
+int add_student(sqlite3 **db) {
+  if (*db == NULL) { // address of sqlite3
+    null_database(*db);
   }
-  
+
   Student student;
   student.register_id = (char *)malloc(5 * sizeof(char));
   student.name = (char *)malloc(50 * sizeof(char));
@@ -115,9 +115,9 @@ int add_student(sqlite3 *db) {
 
   const char *insert_query = "INSERT INTO students (register_id, name, age) VALUES (?, ?, ?);";
   sqlite3_stmt *stmt;
-  int rc = sqlite3_prepare_v2(db, insert_query, -1, &stmt, NULL);
+  int rc = sqlite3_prepare_v2(*db, insert_query, -1, &stmt, NULL);
   if (rc != SQLITE_OK) {
-    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(*db));
     free_student_loc(&student);
     return rc;
   }
@@ -128,7 +128,7 @@ int add_student(sqlite3 *db) {
 
   rc = sqlite3_step(stmt);
   if (rc != SQLITE_DONE) {
-    fprintf(stderr, "Failed to insert student: %s\n", sqlite3_errmsg(db));
+    fprintf(stderr, "Failed to insert student: %s\n", sqlite3_errmsg(*db));
     sqlite3_finalize(stmt);
     free_student_loc(&student);
     return rc;
@@ -164,7 +164,7 @@ int main() {
     prompt_and_input(&choice);
     switch (choice) {
       case 1:
-        err = add_student(db); // give the 'address of sqlite3' as an argument
+        err = add_student(&db); // give the 'address of db' itself as an argument
         if (err) {
           fprintf(stderr, "Failed to add student.\n");
           close_and_exit(&db, EXIT_FAILURE);
