@@ -43,8 +43,11 @@ int initialize_database(sqlite3 *db) {
   return SQLITE_OK;
 }
 
-void close_and_exit(sqlite3 *db, int EXIT_STATUS) {
-  sqlite3_close(db);
+void close_and_exit(sqlite3 **db, int EXIT_STATUS) {
+  if (*db) {
+    sqlite3_close(*db);
+    *db = NULL;
+  }
   exit(EXIT_STATUS);
 }
 
@@ -75,7 +78,7 @@ int main() {
   sqlite3 *db;
   if (initialize_database(db) != SQLITE_OK) {
     fprintf(stderr, "Failed to initialize database.\n");
-    close_and_exit(db, EXIT_FAILURE);
+    close_and_exit(&db, EXIT_FAILURE);
   }
 
   int err = FALSE;
@@ -88,21 +91,21 @@ int main() {
         err = add_student(db);
         if (err) {
           fprintf(stderr, "Failed to add student.\n");
-          close_and_exit(db, EXIT_FAILURE);
+          close_and_exit(&db, EXIT_FAILURE);
         }
         break;
       case 2:
         err = find_student(db);
         if (err) {
           fprintf(stderr, "Failed to view students.\n");
-          close_and_exit(db, EXIT_FAILURE);
+          close_and_exit(&db, EXIT_FAILURE);
         }
         break;
       case 3:
         err = delete_student(db);
         if (err) {
           fprintf(stderr, "Failed to delete student.\n");
-          close_and_exit(db, EXIT_FAILURE);
+          close_and_exit(&db, EXIT_FAILURE);
         }
         break;
       case 4:
@@ -113,5 +116,5 @@ int main() {
     }
   }
 
-  close_and_exit(db, EXIT_SUCCESS);
+  close_and_exit(&db, EXIT_SUCCESS);
 }
