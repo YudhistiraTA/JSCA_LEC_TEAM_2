@@ -199,20 +199,27 @@ int find_student(sqlite3 *db) {
 
   sqlite3_bind_text(stmt, 1, search_name, -1, SQLITE_STATIC);
 
-  int found = 0;
+  int count = 0;
+  printf("\n==================================================\n");
   while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-    found = 1;
-    printf("\nStudent found:\n");
+    if (count > 0) {
+      printf("--------------------------------------------------\n");
+    }
+
+    printf("Student found:\n");
     printf("Register ID: %s\n", sqlite3_column_text(stmt, 0));
     printf("Name: %s\n", sqlite3_column_text(stmt, 1));
-    printf("Age: %d\n\n", sqlite3_column_int(stmt, 2));
+    printf("Age: %d\n", sqlite3_column_int(stmt, 2));
+
+    count++;
   }
 
-  if (!found) {
+  if (!count) {
     printf("No student found with the name '%s'.\n", name);
   } else if (rc != SQLITE_DONE) {
     fprintf(stderr, "Failed during row fetching: %s\n", sqlite3_errmsg(db));
   }
+  printf("==================================================\n\n");
 
   sqlite3_finalize(stmt);
   return SQLITE_OK;
