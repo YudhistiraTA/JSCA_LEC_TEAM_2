@@ -174,7 +174,49 @@ int add_student(sqlite3 *db) {
   return SQLITE_OK;
 }
 
-int find_student(sqlite3 *db) { return 0; }
+int find_student(sqlite3 *db) {
+  if (db == NULL) return NULL_CONNECTION;
+
+  printf("Enter student's name to search: ");
+  char name[50];
+  if (scanf(" %[^\n]", name) != 1) {
+    fprintf(stderr, "Invalid input for Name.\n");
+    return SQLITE_ERROR;
+  }
+
+  char search_name[54];
+  snprintf(search_name, sizeof(search_name), "%%%s%%", name);
+
+  const char *select_query =
+    "SELECT register_id, name, age FROM students WHERE name LIKE ?;";
+
+  sqlite3_stmt *stmt;
+  int rc = sqlite3_prepare_v2(db, select_query, -1, &stmt, NULL);
+  if (rc != SQLITE_OK) {
+    fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+    return rc;
+  }
+
+  sqlite3_bind_text(stmt, 1, search_name, -1, SQLITE_STATIC);
+
+  int found = 0;
+  while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    found = 1;
+    printf("\nStudent found:\n");
+    printf("Register ID: %s\n", sqlite3_column_text(stmt, 0));
+    printf("Name: %s\n", sqlite3_column_text(stmt, 1));
+    printf("Age: %d\n\n", sqlite3_column_int(stmt, 2));
+  }
+
+  if (!found) {
+    printf("No student found with the name '%s'.\n", name);
+  } else if (rc != SQLITE_DONE) {
+    fprintf(stderr, "Failed during row fetching: %s\n", sqlite3_errmsg(db));
+  }
+
+  sqlite3_finalize(stmt);
+  return SQLITE_OK;
+}
 
 int delete_student(sqlite3 *db) { return 0; }
 
