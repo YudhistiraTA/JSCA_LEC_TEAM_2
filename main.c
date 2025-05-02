@@ -225,7 +225,86 @@ int find_student(sqlite3 *db) {
   return SQLITE_OK;
 }
 
-int delete_student(sqlite3 *db) { return 0; }
+int delete_student(sqlite3 *db)
+{
+  if (db == NULL) return NULL_CONNECTION;
+
+  char register_id[5];
+  printf ("\nEnter register ID to delete : ");
+  if (scanf("%4s", register_id) != 1)
+  {
+      fprintf (stderr, "Invalid input for Register ID.\n");
+      while ((getchar()) != '\n');
+      return SQLITE_ERROR;
+  }
+
+  const char *select_query = "SELECT register_id, name, age FROM students WHERE register_id = ?;";
+
+  sqlite3_stmt *check_stmt;
+  
+  int rc = sqlite3_prepare_v2(db, select_query, -1, &check_stmt, NULL);
+  
+  if (rc != SQLITE_OK)
+  {
+      fprintf (stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+      return rc;
+  }
+
+  sqlite3_bind_text(check_stmt, 1, register_id, -1, SQLITE_STATIC);
+  
+  rc = sqlite3_step(check_stmt);
+  if (rc != SQLITE_ROW)
+  {
+      printf ("\nRegister ID not found !!\n");
+      sqlite3_finalize(check_stmt);
+      return SQLITE_ERROR;
+  }
+
+  char confirm;
+  printf ("\n--------------------------------------------------\n");
+  printf ("Register ID : %s\n", sqlite3_column_text(check_stmt, 0));
+  printf ("Name        : %s\n", sqlite3_column_text(check_stmt, 1));
+  printf ("Age         : %d\n", sqlite3_column_int(check_stmt, 2));
+  printf ("--------------------------------------------------\n");
+  printf ("Are you sure you want to delete this student ? (y/n): ");
+  while ((getchar()) != '\n');
+  scanf("%c", &confirm);
+
+  sqlite3_finalize(check_stmt);
+
+  if (confirm != 'y' && confirm != 'Y')
+  {
+      printf("Deletion cancelled.\n");
+      return SQLITE_OK;
+  }
+
+  const char *delete_query = "DELETE FROM students WHERE register_id = ?;";
+  
+  sqlite3_stmt *delete_stmt;
+
+  rc = sqlite3_prepare_v2(db, delete_query, -1, &delete_stmt, NULL);
+  if (rc != SQLITE_OK)
+  {
+      fprintf (stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+      return rc;
+  }
+
+  sqlite3_bind_text(delete_stmt, 1, register_id, -1, SQLITE_STATIC);
+
+  rc = sqlite3_step(delete_stmt);
+  if (rc != SQLITE_DONE)
+  {
+      fprintf (stderr, "Failed to delete student with Register ID : %s\n", sqlite3_errmsg(db));
+      sqlite3_finalize(delete_stmt);
+      return rc;
+  }
+
+  sqlite3_finalize(delete_stmt);
+
+  printf ("Student with register ID %s deleted successfully.\n", register_id);
+  
+  return SQLITE_OK;
+}
 
 void close_loop(int *program_cycle) {
   printf("Exiting...\n");
