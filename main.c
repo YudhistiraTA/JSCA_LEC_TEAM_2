@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "sqlite3.h"
 #define TRUE 1
@@ -54,15 +55,22 @@ void close_and_exit(sqlite3 **db, int EXIT_STATUS) {
 }
 
 void prompt_and_input(int *input) {
-  printf("1. Add Student\n");
+  printf("\n1. Add Student\n");
   printf("2. Find Student\n");
   printf("3. Delete Student\n");
   printf("4. Exit\n");
   printf("Enter your choice: ");
   if ((scanf("%d", input) != 1)) {
     *input = -1;
-    while (getchar() != '\n');  // Clear the input buffer
   }
+  char c;
+  while ((c = getchar()) != '\n'){
+    if (!isspace(c)) {
+      *input = -1;
+    }
+  };
+  
+  printf("\n");
 };
 
 void free_student_loc(Student *student) {
