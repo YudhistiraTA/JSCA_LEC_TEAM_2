@@ -16,8 +16,7 @@ FUNCTION main()
         EXIT FAILURE
     ENDIF
 
-    DECLARE err = 0
-    DECLARE choice = -1
+    DECLARE choice
     DECLARE program_cycle = 1
 
     WHILE program_cycle = 1
