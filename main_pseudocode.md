@@ -1,3 +1,4 @@
+```
 FUNCTION prompt_and_input(ADDRESS OF input)
     PRINT menu options
     SCAN INTO input
@@ -59,5 +60,4 @@ FUNCTION main()
     CLOSE db
     EXIT SUCCESS
 END
-            
-
+```
